@@ -5,5 +5,5 @@ version = "0.1.0"
 authors = ["Zach Dziura <zcdziura@gmail.com>"]
 description = "A simple arrrguments parser"
 repository = "https://github.com/zcdziura/pirate"
-keywords = ["opts", "args", "parser", "getopts", "options", "arguments"]
+keywords = ["parser", "getopts", "options", "arguments"]
 license = "LGPL-3.0+"
