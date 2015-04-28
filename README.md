@@ -142,7 +142,7 @@ fn help() {
 To Do
 -----
 
-- [ ] Create a helper function for generation `--help` output, rather than having the user create it
+- [ ] Create a helper function for generating `--help` output, rather than having the user create it
 manually.
   - [ ] Also create helper functions for defining the description section of the `--help` output.
 - [ ] Refactor the `ErrorKind` enum into a struct that is able to represent more complex data (such
