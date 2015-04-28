@@ -15,26 +15,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::error::Error;
+use std::error;
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug)]
+pub struct Error {
+    kind: ErrorKind,
+    offender: String,
+    desc: String,
+}
+
+impl Error {
+    pub fn new(kind: ErrorKind, offender: String) -> Error {
+        Error {
+            kind: kind,
+            offender: offender,
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        &format!("{} {}", self.kind.description(), self.offender);
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.description())
+    }
+}
+
 pub enum ErrorKind {
     InvalidOption,
     MissingArgument,
 }
 
-impl Error for ErrorKind {
+impl ErrorKind {
     fn description(&self) -> &str {
         match *self {
-            ErrorKind::InvalidOption => "An invalid option was passed to the program",
-            ErrorKind::MissingArgument => "A required argument is missing",
+            ErrorKind::InvalidOption => "An invalid option was passed to the program:",
+            ErrorKind::MissingArgument => "A required argument is missing:",
         }
     }
 }
 
-impl Display for ErrorKind {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}", self.description())
-    }
-}
