@@ -1,4 +1,4 @@
-Pirate
+Pirate [![Build Status](https://travis-ci.org/zcdziura/pirate.svg)](https://travis-ci.org/zcdziura/pirate)
 ======
 
 A command-line arrrrguments parser, written in Rust.
