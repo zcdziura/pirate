@@ -21,11 +21,11 @@ mod opts;
 
 use std::env::Args;
 
-pub use errors::ErrorKind;
+pub use errors::{Error, ErrorKind};
 pub use matches::Matches;
 use opts::Opts;
 
-pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, errors::ErrorKind> {
+pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, ErrorKind> {
     let mut matches: Matches = Matches::new();
 
     let mut opts: Opts = opts(options); // Jesus, this is redundant...
@@ -52,7 +52,7 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, errors
                     // NOTE: The corresponding arg MUST be immediately following
                     current_arg = match args.next() {
                         None => {
-                            return Err(ErrorKind::MissingArgument);
+                            return Err(Error::new(ErrorKind::MissingArgument, arg));
                         },
                         Some(a) => a
                     };
@@ -62,7 +62,7 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, errors
                     matches.insert(&arg, "");
                 }
             } else {
-                return Err(ErrorKind::InvalidOption);
+                return Err(Error::new(ErrorKind::InvalidOption, arg));
             }
 
         } else { // Probably a required arg
