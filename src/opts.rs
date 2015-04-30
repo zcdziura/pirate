@@ -50,4 +50,8 @@ impl Opts {
     pub fn get_arg(&mut self) -> Option<String> {
         self.args.pop_front()
     }
+
+    pub fn arg_len(&self) -> usize {
+        self.args.len()
+    }
 }

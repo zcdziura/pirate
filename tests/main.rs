@@ -23,6 +23,7 @@ fn main() {
     }
 
     let input = matches.get("input").unwrap().parse::<i32>().unwrap();
+
     let num = match matches.get("n") {
         Some(n) => n.parse::<i32>().unwrap(),
         None => 1

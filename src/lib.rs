@@ -25,7 +25,7 @@ pub use errors::{Error, ErrorKind};
 pub use matches::Matches;
 use opts::Opts;
 
-pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, ErrorKind> {
+pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error> {
     let mut matches: Matches = Matches::new();
 
     let mut opts: Opts = opts(options); // Jesus, this is redundant...
@@ -73,7 +73,10 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, ErrorK
         next_arg = args.next();
     }
 
-    Ok(matches)
+    match opts.arg_len() {
+        0 => Ok(matches),
+        _ => Err(Error::new(ErrorKind::MissingArgument, opts.get_arg().unwrap())),
+    }
 }
 
 fn opts(opts: &[&'static str]) -> Opts {

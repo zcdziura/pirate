@@ -13,9 +13,10 @@ Ever.
 
 In all seriousness, `getopts` is a fantastic library that gives the developers all of the tools
 necessary to create and interface with command-line arguments. However, with all that power comes
-complexity. `getopts`, while straight forward to use, is verbose. The developer has to make repeated
-method calls to add different command-line options. And while the only victim here is the
-developer's wrists due to carpal tunnel, I felt that there was a better way to do things.
+complexity. `getopts` -- while straight forward to use -- is verbose. The developer has to call
+different functions repeatedly in order to add different command-line options to their programs. And
+while the only victim here is the developer's wrists due to carpal tunnel, I felt that there was a
+better way to do things.
 
 Enter Pirate (which should totally usurp `getopts` for the award of Most Originally Named Project Ever).
 
@@ -32,7 +33,7 @@ pirate = "0.1.0"
 and this to your crate root:
 
 ```rust
-extern crate getopts;
+extern crate pirate;
 ```
 
 Usage
@@ -145,7 +146,7 @@ To Do
 - [ ] Create a helper function for generating `--help` output, rather than having the user create it
 manually.
   - [ ] Also create helper functions for defining the description section of the `--help` output.
-- [ ] Refactor the `ErrorKind` enum into a struct that is able to represent more complex data (such
+- [x] Refactor the `ErrorKind` enum into a struct that is able to represent more complex data (such
   giving the value of the invalid argument passed to the program).
 
 License

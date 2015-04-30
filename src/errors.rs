@@ -28,34 +28,36 @@ pub struct Error {
 impl Error {
     pub fn new(kind: ErrorKind, offender: String) -> Error {
         Error {
-            kind: kind,
-            offender: offender,
+            kind: kind.clone(),
+            offender: offender.clone(),
+            desc: format!("{} {}", kind.description(), offender.clone()),
         }
     }
 }
 
 impl error::Error for Error {
     fn description(&self) -> &str {
-        &format!("{} {}", self.kind.description(), self.offender);
+        &self.desc
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}", self.description())
+        write!(f, "{}", self.desc)
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum ErrorKind {
     InvalidOption,
     MissingArgument,
 }
 
 impl ErrorKind {
-    fn description(&self) -> &str {
+    fn description(&self) -> String {
         match *self {
-            ErrorKind::InvalidOption => "An invalid option was passed to the program:",
-            ErrorKind::MissingArgument => "A required argument is missing:",
+            ErrorKind::InvalidOption => String::from("An invalid option was passed to the program:"),
+            ErrorKind::MissingArgument => String::from("A required argument is missing:"),
         }
     }
 }
