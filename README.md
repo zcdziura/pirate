@@ -27,7 +27,7 @@ Add this to your `Cargo.toml:
 
 ```
 [dependencies]
-pirate = "0.1.0"
+pirate = "0.2.0"
 ```
 
 and this to your crate root:
