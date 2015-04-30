@@ -1,7 +1,7 @@
 [package]
 
 name = "pirate"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Zach Dziura <zcdziura@gmail.com>"]
 description = "A simple arrrguments parser"
 repository = "https://github.com/zcdziura/pirate"
