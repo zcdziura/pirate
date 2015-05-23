@@ -95,6 +95,7 @@ use std::env;
 
 use pirate::Matches;
 
+
 fn main() {
     let opts = &["n:", "b/boop", ":input"];
 
@@ -108,7 +109,7 @@ fn main() {
     };
 
     // Print the program help if necessary
-    if matches.has_match("h") || matches.has_match("help") {
+    if matches.has_arg("h") || matches.has_arg("help") {
         help();
         return;
     }
@@ -119,11 +120,11 @@ fn main() {
         None => 1
     };
 
-    let sum = input + num; 
+    let sum = input + num;
 
-    println!("{} + {} = {}", input, num, sum); 
+    println!("{} + {} = {}", input, num, sum);
 
-    if matches.has_match("b") || matches.has_match("boop") {
+    if matches.has_arg("b") || matches.has_arg("boop") {
         println!("Boop!!");
     }
 }
