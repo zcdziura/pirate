@@ -39,10 +39,10 @@ extern crate pirate;
 Usage
 -----
 
-Using Pirate is simple. First, create an array slice defining all of the valid opts that your
+Using Pirate is simple. First, create a vector defining all of the valid opts that your
 program accepts:
 
-`let opts = &["o:", "l/long", ":arg"];`
+`let opts = vec!["o:", "l/long", ":arg"];`
 
 Opts are defined in a specific format:
 
@@ -53,15 +53,15 @@ Opts are defined in a specific format:
   * All other opts are defined normally, e.g. `"l"` is an opt in short form, `"long"` is an opt in
     long form.
 
-Next, call the `pirate::parse()` function, passing in the environment arguments along with the slice
-of opts that you defined:
+Next, call the `pirate::parse()` function, passing in the environment arguments along with a reference
+to the opts that you defined:
 
-`let matches = pirate::parse(env::args(), opts);`
+`let matches = pirate::parse(env::args(), &opts);`
 
 Now, handle any errors that may have arisen from parsing:
 
 ```
-let matches: Matches = match pirate::parse(env::args(), opts) {
+let matches: Matches = match pirate::parse(env::args(), &opts) {
     Err(ref e) => {
         println!("Error: {}", e);
         help();
@@ -97,9 +97,9 @@ use pirate::Matches;
 
 
 fn main() {
-    let opts = &["n:", "b/boop", ":input"];
+    let opts = vec!["n:", "b/boop", ":input"];
 
-    let matches: Matches = match pirate::parse(env::args(), opts) {
+    let matches: Matches = match pirate::parse(env::args(), &opts) {
         Err(ref e) => {
             println!("Error: {}", e);
             help();

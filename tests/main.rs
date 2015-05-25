@@ -5,9 +5,9 @@ use std::env;
 use pirate::Matches;
 
 fn main() {
-    let opts = &["n:", "b/boop", ":input"];
+    let opts = vec!["n:", "b/boop", ":input"];
 
-    let matches: Matches = match pirate::parse(env::args(), opts) {
+    let matches: Matches = match pirate::parse(env::args(), &opts) {
         Err(ref e) => {
             println!("Error: {}", e);
             help();
