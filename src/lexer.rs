@@ -15,33 +15,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{self, Display, Formatter};
 
 use errors::{Error, ErrorKind};
 
-pub fn analyze(input: &str) -> Result<Token, Error> {
+pub fn collect(input: &[&str]) -> Result<Vec<Token>, Error> {
+    let mut vector: Vec<Token> = Vec::new();
+    for item in input.iter() {
+        match analyze(item) {
+            Err(why) => return Err(why),
+            Ok(item) => vector.push(item)
+        }
+    }
+    
+    Ok(vector)
+}
+
+fn analyze(input: &str) -> Result<Token, Error> {
     let mut token = Token::new();
     
-    token.is_arg = match &opt[..1] {
+    token.is_arg = match &input[..1] {
         ":" => true,
         _ => false
     };
     
-    token.has_arg = match &opt[(opt.len() - 1)..] {
+    token.has_arg = match &input[(input.len() - 1)..] {
         ":" => true,
         _ => false
     };
     
     if token.is_arg && token.has_arg {
-        return Error::new(ErrorKind::OptionFormat, String::from(input));
+        return Err(Error::new(ErrorKind::OptionFormat, String::from(input)));
     }
     
     let option = &input[1..(input.len() - 1)];
 
     let mut current_stage = AnalysisStage::ShortName;
-    let mut current_char = option.chars().next();
+    let mut char_iter = option.chars();
+    let mut current_char = char_iter.next();
     while current_char.is_some() {
-        match current_char {
+        let c = current_char.unwrap();
+        match c {
             '/' => {
                 current_stage = AnalysisStage::LongName;
                 continue;
@@ -55,12 +69,12 @@ pub fn analyze(input: &str) -> Result<Token, Error> {
         }
         
         match current_stage {
-            ShortName => token.short_name.push(current_char),
-            LongName => token.long_name.push(current_char),
-            Description => token.description.push(current_char)
+            AnalysisStage::ShortName => token.short_name.push(c),
+            AnalysisStage::LongName => token.long_name.push(c),
+            AnalysisStage::Description => token.description.push(c)
         }
         
-        current_char = current_char.next();
+        current_char = char_iter.next();
     }
     
     Ok(token)
@@ -72,11 +86,12 @@ enum AnalysisStage {
     Description
 }
 
+#[derive(Clone)]
 pub struct Token {
     short_name: String,
     long_name: String,
-    is_arg: bool,
-    has_arg: bool,
+    pub is_arg: bool,
+    pub has_arg: bool,
     is_group: bool,
     description: String
 }
@@ -92,11 +107,21 @@ impl Token {
             description: String::new()
         }
     }
+    
+    pub fn name(&self) -> &str {
+        if !self.short_name.is_empty() {
+            &self.short_name
+        } else if !self.long_name.is_empty() {
+            &self.long_name
+        } else {
+            ""   
+        }
+    }
 }
 
 impl Display for Token {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let repr = format!("-{}, --{}    {}", self.short_name, self.long_name, self.description);
-        write(self, "{}", repr)
+        write!(f, "{}", repr)
     }
 }
