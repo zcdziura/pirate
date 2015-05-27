@@ -22,7 +22,7 @@ use std::fmt::{Display, Formatter, Result};
 pub struct Error {
     kind: ErrorKind,
     offender: String,
-    desc: String,
+    desc: String
 }
 
 impl Error {
@@ -49,15 +49,17 @@ impl Display for Error {
 
 #[derive(Clone, Debug)]
 pub enum ErrorKind {
-    InvalidOption,
+    InvalidArgument,
     MissingArgument,
+    OptionFormat
 }
 
 impl ErrorKind {
     fn description(&self) -> String {
         match *self {
-            ErrorKind::InvalidOption => String::from("An invalid option was passed to the program:"),
+            ErrorKind::InvalidArgument => String::from("An invalid option was passed to the program:"),
             ErrorKind::MissingArgument => String::from("A required argument is missing:"),
+            ErrorKind::OptionFormat => String::from("An option was defined in the wrong format:")
         }
     }
 }

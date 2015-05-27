@@ -62,7 +62,7 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error>
                     matches.insert(&arg, "");
                 }
             } else {
-                return Err(Error::new(ErrorKind::InvalidOption, arg));
+                return Err(Error::new(ErrorKind::InvalidArgument, arg));
             }
 
         } else { // Probably a required arg
