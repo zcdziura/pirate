@@ -24,6 +24,7 @@ use std::env::Args;
 
 pub use errors::{Error, ErrorKind};
 pub use matches::Matches;
+pub use lexer::{analyze, collect, Token};
 use opts::Opts;
 
 pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error> {

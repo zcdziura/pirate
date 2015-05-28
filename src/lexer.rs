@@ -31,7 +31,7 @@ pub fn collect(input: &[&str]) -> Result<Vec<Token>, Error> {
     Ok(vector)
 }
 
-fn analyze(input: &str) -> Result<Token, Error> {
+pub fn analyze(input: &str) -> Result<Token, Error> {
     let mut token = Token::new();
     
     token.is_arg = match &input[..1] {
@@ -48,35 +48,34 @@ fn analyze(input: &str) -> Result<Token, Error> {
         return Err(Error::new(ErrorKind::OptionFormat, String::from(input)));
     }
     
-    let option = &input[1..(input.len() - 1)];
+    let option = if token.is_arg {
+        &input[1..]
+    } else if token.has_arg {
+        &input[..(input.len() - 1)]
+    } else {
+        input
+    };
 
     let mut current_stage = AnalysisStage::ShortName;
-    let mut char_iter = option.chars();
-    let mut current_char = char_iter.next();
-    while current_char.is_some() {
-        let c = current_char.unwrap();
+    for c in option.chars() {
         match c {
-            '/' => {
-                current_stage = AnalysisStage::LongName;
-                continue;
-            },
-            '(' => {
-                current_stage = AnalysisStage::Description;
-                continue;
-            },
-            ')' => break,
-            _ => ()
+            '/' => current_stage = AnalysisStage::LongName,
+            '(' => current_stage = AnalysisStage::Description,
+            ')' => (),
+            _ => {
+                match current_stage {
+                    AnalysisStage::ShortName => token.short_name.push(c),
+                    AnalysisStage::LongName => token.long_name.push(c),
+                    AnalysisStage::Description => token.description.push(c)
+                }
+            }
         }
-        
-        match current_stage {
-            AnalysisStage::ShortName => token.short_name.push(c),
-            AnalysisStage::LongName => token.long_name.push(c),
-            AnalysisStage::Description => token.description.push(c)
-        }
-        
-        current_char = char_iter.next();
     }
     
+    if token.short_name.is_empty() && token.long_name.is_empty() {
+        token.is_group = true;
+    }
+
     Ok(token)
 }
 
@@ -116,6 +115,16 @@ impl Token {
         } else {
             ""   
         }
+    }
+
+    pub fn fmt_with_padding(&self, padding: usize) -> String {
+        let mut name = format!("-{}, --{}", self.short_name, self.long_name);
+
+        for _ in 0..padding {
+            name.push(' ');
+        }
+
+        name
     }
 }
 
