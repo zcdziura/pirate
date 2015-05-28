@@ -16,6 +16,7 @@
  */
 
 pub mod errors;
+pub mod lexer;
 pub mod matches;
 mod opts;
 
@@ -28,7 +29,12 @@ use opts::Opts;
 pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error> {
     let mut matches: Matches = Matches::new();
 
-    let mut opts: Opts = opts(options); // Jesus, this is redundant...
+    let tokens = match lexer::collect(options) {
+        Err(why) => return Err(why),
+        Ok(t) => t
+    };
+    matches.tokens = tokens.clone();
+    let mut opts: Opts = opts(&tokens);
 
     args.next(); // Remove the program name from the list of program arguments
     
@@ -79,34 +85,14 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error>
     }
 }
 
-fn opts(opts: &[&'static str]) -> Opts {
+fn opts(opts: &Vec<lexer::Token>) -> Opts {
     let mut options = Opts::new();
 
     for opt in opts.iter() {
-        let is_arg: bool = match &opt[..1] {
-            ":" => true,
-            _ => false
-        };
-
-        let has_arg: bool = match &opt[(opt.len() - 1)..] {
-            ":" => true,
-            _ => false
-        };
-
-        if is_arg {
-            options.insert_arg(&opt[1..]);
+        if opt.is_arg {
+            options.insert_arg(opt.name());
         } else {
-            let option: &str;
-
-            if has_arg {
-              option = &opt[..(opt.len() - 1)];
-            } else {
-                option = *opt;
-            }
-
-            for form in option.split("/") {
-                options.insert_opt(form, has_arg);
-            }
+            options.insert_opt(opt.name(), opt.has_arg);
         }
     }
 
