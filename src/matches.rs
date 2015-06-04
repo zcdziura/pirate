@@ -18,11 +18,8 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
 
-use lexer;
-
 pub struct Matches {
-    matches: HashMap<String, String>,
-    pub tokens: Vec<lexer::Token>
+    matches: HashMap<String, String>
 }
 
 impl Matches {

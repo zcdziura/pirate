@@ -25,7 +25,7 @@ use std::env::Args;
 pub use errors::{Error, ErrorKind};
 pub use matches::Matches;
 pub use lexer::{analyze, collect, Token};
-use opts::Opts;
+use opts::{opts, Opts};
 
 pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error> {
     let mut matches: Matches = Matches::new();
@@ -42,36 +42,44 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error>
     let mut next_arg = args.next();
     while next_arg.is_some() {
         let mut current_arg = next_arg.unwrap();
-        let arg: String;
+        let mut arg_vec: Vec<String> = Vec::new();
 
-        if &current_arg[..1] == "-" { // Probably a opt
-            if current_arg.len() == 2 { // Short form opt
-                arg = String::from(&current_arg[1..]);
-            } else { // Assuming it's a long form opt
-                //TODO: Handle cases where it may be a opt group
-                arg = String::from(&current_arg[2..]);
-            }
-
-            if opts.contains_opt(&arg) {
-                let has_arg: bool = *opts.get_opt(&arg).unwrap();
-
-                if has_arg {
-                    // NOTE: The corresponding arg MUST be immediately following
-                    current_arg = match args.next() {
-                        None => {
-                            return Err(Error::new(ErrorKind::MissingArgument, arg));
-                        },
-                        Some(a) => a
-                    };
-                    
-                    matches.insert(&arg, &current_arg);
-                } else {
-                    matches.insert(&arg, "");
+        // Determine if current opt is in short, long, or arg form
+        if &current_arg[..1] == "-" {
+            if &current_arg[..2] == "--" { // Long form opt
+                arg_vec.push(String::from(&current_arg[2..]));
+            } else { // Short form opt
+                // Assuming it's a group of short-form opts; e.g. tar -xzf
+                for c in current_arg[1..].chars() {
+                    let mut s = String::new();
+                    s.push(c);
+                    arg_vec.push(s);
                 }
-            } else {
-                return Err(Error::new(ErrorKind::InvalidArgument, arg));
             }
 
+            for arg in arg_vec.iter() {
+                if opts.contains_opt(&arg) {
+                    let has_arg: bool = *opts.get_opt(&arg).unwrap();
+
+                    if has_arg {
+                        // NOTE: The corresponding arg MUST be immediately following
+                        current_arg = match args.next() {
+                            None => {
+                                let arg_ = (*arg).clone();
+                                return Err(Error::new(ErrorKind::MissingArgument, arg_));
+                            },
+                            Some(a) => a
+                        };
+
+                        matches.insert(&arg, &current_arg);
+                    } else {
+                        matches.insert(&arg, "");
+                    }
+                } else {
+                    let arg_ = (*arg).clone();
+                    return Err(Error::new(ErrorKind::InvalidArgument, arg_));
+                }
+            }
         } else { // Probably a required arg
             let arg_name: String = opts.get_arg().unwrap();
             matches.insert(&arg_name, &current_arg);
@@ -86,20 +94,10 @@ pub fn parse(mut args: Args, options: &[&'static str]) -> Result<Matches, Error>
     }
 }
 
-fn opts(opts: &Vec<lexer::Token>) -> Opts {
-    let mut options = Opts::new();
+pub fn help(tokens: &Vec<lexer::Token>, program_name: &str, program_desc: &str) {
+    println!("{} - {}", program_name, program_desc);
 
-    for opt in opts.iter() {
-        if opt.is_arg {
-            options.insert_arg(opt.name());
-        } else {
-            options.insert_opt(opt.name(), opt.has_arg);
-        }
+    for token in tokens.iter() {
+        println!("{}", token);
     }
-
-    // Push the obligatory "-h/--help" options
-    options.insert_opt("h", false);
-    options.insert_opt("help", false);
-
-    options
 }

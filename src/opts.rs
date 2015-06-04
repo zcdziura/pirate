@@ -18,21 +18,33 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
+use lexer;
+
 pub struct Opts {
     pub opts: HashMap<String, bool>,
     pub args: VecDeque<String>,
 }
 
 impl Opts {
-    pub fn new() -> Opts {
-        Opts {
-            opts: HashMap::new(),
-            args: VecDeque::new()
+    pub fn new(options: &[&'static str]) -> Opts {
+        let opts: Hashmap<String, bool> = HashMap::new();
+        let args: VecDeque<String> = VecDeque::new();
+        
+        for opt in opts.iter() {
+            if opt.is_arg {
+                args.push_back(String::from(opt.name()));
+            } else {
+                opts.insert(String::from(opt.name()), opt.has_arg);
+           }
         }
-    }
-
-    pub fn insert_opt(&mut self, key: &str, value: bool) {
-        self.opts.insert(String::from(key), value);
+        
+        opts.insert(String::from("-h", false));
+        opts.insert(String::from("--help", false));
+        
+        Opts {
+            opts: opts,
+            args: args
+        }
     }
 
     pub fn get_opt(&self, opt_name: &String) -> Option<&bool> {
@@ -41,10 +53,6 @@ impl Opts {
 
     pub fn contains_opt(&self, opt: &String) -> bool {
         self.opts.contains_key(opt)
-    }
-
-    pub fn insert_arg(&mut self, arg: &str) {
-        self.args.push_back(String::from(arg));
     }
 
     pub fn get_arg(&mut self) -> Option<String> {
