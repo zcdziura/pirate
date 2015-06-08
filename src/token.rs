@@ -31,7 +31,7 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(input: &str, padding: usize) -> Result<Token, Error> {
+    pub fn new(input: &str) -> Result<Token, Error> {
         let mut short_name = String::new();
         let mut long_name = String::new();
         let mut description = String::new();
@@ -88,7 +88,7 @@ impl Token {
             has_arg: has_arg,
             is_group: is_group,
             description: description,
-            padding: padding
+            padding: 0
         })
     }
     
@@ -101,15 +101,9 @@ impl Token {
             ""   
         }
     }
-
-    pub fn fmt_with_padding(&self, padding: usize) -> String {
-        let mut name = format!("-{}, --{}", self.short_name, self.long_name);
-
-        for _ in 0..padding {
-            name.push(' ');
-        }
-
-        name
+    
+    pub fn adjust_padding(&self, padding: usize) {
+        self.padding = padding;
     }
 }
 
@@ -123,7 +117,7 @@ impl Display for Token {
         let repr = if self.is_group {
             format!("{}:", self.description)
         } else {
-            format!("-{}, --{}{}{}", self.short_name, self.long_name, spacing self.description)
+            format!("  -{}, --{}{}{}", self.short_name, self.long_name, spacing self.description)
         };
 
         write!(f, "{}", repr)

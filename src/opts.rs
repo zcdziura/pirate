@@ -18,33 +18,45 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
-use lexer;
+use errors::Error;
+use token::Token;
 
 pub struct Opts {
     pub opts: HashMap<String, bool>,
     pub args: VecDeque<String>,
+    tokens: Vec<Token>
 }
 
 impl Opts {
-    pub fn new(options: &[&'static str]) -> Opts {
-        let opts: Hashmap<String, bool> = HashMap::new();
-        let args: VecDeque<String> = VecDeque::new();
+    pub fn new(options: &[&str]) -> Result<Opts, Error> {
+        let mut opts: Hashmap<String, bool> = HashMap::new();
+        let mut args: VecDeque<String> = VecDeque::new();
+        let mut tokens: Vec<Token> = Vec::new();
         
-        for opt in opts.iter() {
-            if opt.is_arg {
-                args.push_back(String::from(opt.name()));
-            } else {
-                opts.insert(String::from(opt.name()), opt.has_arg);
-           }
+        for opt in options.iter() {
+            let token = match Token::new(opt) {
+                Ok(t) => t,
+                Err(why) => return Err(why)
+            };
+            
+            if !token.is_group {
+                if token.is_arg {
+                    args.push_back(String::from(token.name()));
+                } else {
+                    opts.insert(String::from(token.name()), token.has_arg);
+                }
+            }
+            tokens.push(token);
         }
         
         opts.insert(String::from("-h", false));
         opts.insert(String::from("--help", false));
         
-        Opts {
+        Ok(Opts {
             opts: opts,
-            args: args
-        }
+            args: args,
+            tokens: tokens
+        })
     }
 
     pub fn get_opt(&self, opt_name: &String) -> Option<&bool> {

@@ -16,9 +16,9 @@
  */
 
 pub mod errors;
-pub mod lexer;
 pub mod matches;
 mod opts;
+mod token;
 
 use std::env::Args;
 
