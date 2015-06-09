@@ -15,7 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-pub mod errors;
-pub mod matches;
-pub mod vars;
-mod token;
+use vars::Vars;
+
+pub fn usage(vars: &Vars) {
+    for token in vars.tokens.iter() {
+        println!("{}", token);
+    }
+}

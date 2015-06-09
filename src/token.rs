@@ -25,7 +25,7 @@ pub struct Token {
     long_name: String,
     pub is_arg: bool,
     pub has_arg: bool,
-    is_group: bool,
+    pub is_group: bool,
     description: String,
     padding: usize
 }
@@ -52,9 +52,9 @@ impl Token {
         }
 
         let option = if is_arg {
-            input[1..]
+            &input[1..]
         } else if has_arg {
-            input[..last_char]
+            &input[..last_char]
         } else {
             input
         };
@@ -102,7 +102,24 @@ impl Token {
         }
     }
     
-    pub fn adjust_padding(&self, padding: usize) {
+    pub fn len(&self) -> usize {
+        let short_name_empty = self.short_name.is_empty();
+        let long_name_empty = self.long_name.is_empty();
+        
+        let repr = if !short_name_empty && !long_name_empty {
+                format!("-{}, --{}", self.short_name, self.long_name)
+            } else if !short_name_empty && long_name_empty {
+                format!("-{}", self.short_name)
+            } else if short_name_empty && !long_name_empty {
+                format!("--{}", self.long_name)
+            } else {
+                String::new()
+            };
+        
+        repr.len()
+    }
+    
+    pub fn adjust_padding(&mut self, padding: usize) {
         self.padding = padding;
     }
 }
@@ -110,14 +127,14 @@ impl Token {
 impl Display for Token {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut spacing = String::new();
-        for 0..self.padding {
+        for _ in 0..self.padding {
             spacing.push(' ');
         }
         
         let repr = if self.is_group {
             format!("{}:", self.description)
         } else {
-            format!("  -{}, --{}{}{}", self.short_name, self.long_name, spacing self.description)
+            format!("  -{}, --{}{}    {}", self.short_name, self.long_name, spacing, self.description)
         };
 
         write!(f, "{}", repr)

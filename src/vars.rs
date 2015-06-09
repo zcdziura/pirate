@@ -17,21 +17,23 @@
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::slice::Iter;
 
 use errors::Error;
 use token::Token;
 
-pub struct Opts {
+pub struct Vars {
     pub opts: HashMap<String, bool>,
     pub args: VecDeque<String>,
-    tokens: Vec<Token>
+    pub tokens: Vec<Token>
 }
 
-impl Opts {
-    pub fn new(options: &[&str]) -> Result<Opts, Error> {
-        let mut opts: Hashmap<String, bool> = HashMap::new();
+impl Vars {
+    pub fn new(options: &[&str]) -> Result<Vars, Error> {
+        let mut opts: HashMap<String, bool> = HashMap::new();
         let mut args: VecDeque<String> = VecDeque::new();
         let mut tokens: Vec<Token> = Vec::new();
+        let mut longest_token_len: usize = 0;
         
         for opt in options.iter() {
             let token = match Token::new(opt) {
@@ -45,14 +47,25 @@ impl Opts {
                 } else {
                     opts.insert(String::from(token.name()), token.has_arg);
                 }
+                
+                let token_len = token.len();
+                if token_len > 0 {
+                    if token_len > longest_token_len {
+                        longest_token_len = token_len;
+                        for t in tokens.iter_mut() {
+                            let diff = longest_token_len - t.len();
+                            t.adjust_padding(diff);
+                        }
+                    }
+                }
             }
             tokens.push(token);
         }
         
-        opts.insert(String::from("-h", false));
-        opts.insert(String::from("--help", false));
+        opts.insert(String::from("-h"), false);
+        opts.insert(String::from("--help"), false);
         
-        Ok(Opts {
+        Ok(Vars {
             opts: opts,
             args: args,
             tokens: tokens
