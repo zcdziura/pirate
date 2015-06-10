@@ -17,7 +17,6 @@
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::slice::Iter;
 
 use errors::Error;
 use token::Token;

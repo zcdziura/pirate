@@ -19,14 +19,14 @@ use std::fmt::{self, Display, Formatter};
 
 use errors::{Error, ErrorKind};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Token {
     short_name: String,
     long_name: String,
+    description: String,
     pub is_arg: bool,
     pub has_arg: bool,
     pub is_group: bool,
-    description: String,
     padding: usize
 }
 
@@ -134,7 +134,7 @@ impl Display for Token {
         let repr = if self.is_group {
             format!("{}:", self.description)
         } else {
-            format!("  -{}, --{}{}    {}", self.short_name, self.long_name, spacing, self.description)
+            format!("  -{}, --{}{}  {}", self.short_name, self.long_name, spacing, self.description)
         };
 
         write!(f, "{}", repr)
@@ -145,4 +145,72 @@ enum AnalysisStage {
     ShortName,
     LongName,
     Description
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Token;
+
+    #[test]
+    fn test_new_token() {
+        let opt = "h/help(Display the program usage)";
+        let token = match Token::new(opt) {
+            Ok(t) => t,
+            Err(why) => panic!("Received error: {}", why)
+        };
+        let control_token = Token {
+            short_name: String::from("h"),
+            long_name: String::from("help"),
+            description: String::from("Display the program usage"),
+            is_arg: false,
+            has_arg: false,
+            is_group: false,
+            padding: 0
+        };
+
+        println!("{}", token);
+        assert_eq!(token, control_token);
+    }
+
+    #[test]
+    fn test_new_group() {
+        let opt = "(This is a group)";
+        let token = match Token::new(opt) {
+            Ok(t) => t,
+            Err(why) => panic!("Received error: {}", why)
+        };
+        let control_token = Token {
+            short_name: String::new(),
+            long_name: String::new(),
+            description: String::from("This is a group"),
+            is_arg: false,
+            has_arg: false,
+            is_group: true,
+            padding: 0
+        };
+
+        println!("{}", token);
+        assert_eq!(token, control_token);
+    }
+
+    #[test]
+    fn control_token_with_arg() {
+        let opt = "o/option(An option with an argument):";
+        let token = match Token::new(opt) {
+            Ok(t) => t,
+            Err(why) => panic!("Received error: {}", why)
+        };
+        let control_token = Token {
+            short_name: String::from("o"),
+            long_name: String::from("option"),
+            description: String::from("An option with an argument"),
+            is_arg: false,
+            has_arg: true,
+            is_group: false,
+            padding: 0
+        };
+
+        println!("{}", token);
+        assert_eq!(token, control_token);
+    }
 }

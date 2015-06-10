@@ -15,7 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-pub mod errors;
-pub mod matches;
-pub mod vars;
+mod errors;
+mod matches;
 mod token;
+mod usage;
+mod vars;
+
+pub use matches::Matches;
+pub use vars::Vars;
+pub use usage::usage;
