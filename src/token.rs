@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::ascii::AsciiExt;
 use std::fmt::{self, Display, Formatter};
 
 use errors::{Error, ErrorKind};
@@ -92,14 +93,9 @@ impl Token {
         })
     }
     
-    pub fn name(&self) -> &str {
-        if !self.short_name.is_empty() {
-            &self.short_name
-        } else if !self.long_name.is_empty() {
-            &self.long_name
-        } else {
-            ""   
-        }
+    
+    pub fn adjust_padding(&mut self, padding: usize) {
+        self.padding = padding;
     }
     
     pub fn len(&self) -> usize {
@@ -119,8 +115,51 @@ impl Token {
         repr.len()
     }
     
-    pub fn adjust_padding(&mut self, padding: usize) {
-        self.padding = padding;
+    pub fn name(&self) -> &str {
+        if !self.long_name.is_empty() {
+            &self.long_name
+        } else if !self.short_name.is_empty() {
+            &self.short_name
+        } else {
+            ""   
+        }
+    }
+    
+    pub fn usage(&self) -> Option<String> {
+        let mut repr = String::new();
+        
+        if !self.is_group {
+            if !self.is_arg {
+                repr.push('[');
+                
+                if !self.short_name.is_empty() {
+                    repr.push('-');
+                    repr.push_str(&self.short_name);
+                }
+
+                if !self.long_name.is_empty() {
+                    repr.push_str(" | --");
+                    repr.push_str(&self.long_name);
+                }
+
+                if self.has_arg {
+                    let name = String::from(self.name());
+                    name.to_ascii_uppercase();
+                    repr.push(' ');
+                    repr.push_str(&name);
+                }
+                
+                repr.push(']');
+            } else {
+                let name = String::from(self.name());
+                name.to_ascii_uppercase();
+                repr.push_str(&name);
+            }
+            
+            Some(repr)
+        } else {
+            None
+        }
     }
 }
 
@@ -194,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn control_token_with_arg() {
+    fn test_new_token_with_arg() {
         let opt = "o/option(An option with an argument):";
         let token = match Token::new(opt) {
             Ok(t) => t,
@@ -212,5 +251,51 @@ mod tests {
 
         println!("{}", token);
         assert_eq!(token, control_token);
+    }
+
+    #[test]
+    fn test_new_token_as_arg() {
+        let opt = ":a/arg(An argument)";
+        let token = match Token::new(opt) {
+            Ok(t) => t,
+            Err(why) => panic!("Received error: {}", why)
+        };
+        let control_token = Token {
+            short_name: String::from("a"),
+            long_name: String::from("arg"),
+            description: String::from("An argument"),
+            is_arg: true,
+            has_arg: false,
+            is_group: false,
+            padding: 0
+        };
+
+        println!("{}", token);
+        assert_eq!(token, control_token);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_token_format() {
+        let input = ":w/wrong(Wrong format):";
+        match Token::new(input) {
+            Ok(t) => t,
+            Err(why) => panic!("Received error: {}", why)
+        };
+    }
+
+    #[test]
+    fn test_name() {
+        let short_name = "o/out";
+        let long_name = "/out";
+        let group = "(Output)";
+        
+        let short_token = Token::new(short_name).unwrap();
+        let long_token = Token::new(long_name).unwrap();
+        let group_token = Token::new(group).unwrap();
+        
+        assert_eq!(short_token.name(), "o");
+        assert_eq!(long_token.name(), "out");
+        assert_eq!(group_token.name(), "");
     }
 }

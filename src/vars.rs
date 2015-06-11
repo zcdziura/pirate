@@ -24,11 +24,12 @@ use token::Token;
 pub struct Vars {
     pub opts: HashMap<String, bool>,
     pub args: VecDeque<String>,
-    pub tokens: Vec<Token>
+    pub tokens: Vec<Token>,
+    pub program_name: String
 }
 
 impl Vars {
-    pub fn new(options: &[&str]) -> Result<Vars, Error> {
+    pub fn new(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
         let mut opts: HashMap<String, bool> = HashMap::new();
         let mut args: VecDeque<String> = VecDeque::new();
         let mut tokens: Vec<Token> = Vec::new();
@@ -67,7 +68,8 @@ impl Vars {
         Ok(Vars {
             opts: opts,
             args: args,
-            tokens: tokens
+            tokens: tokens,
+            program_name: program_name
         })
     }
 

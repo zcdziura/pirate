@@ -51,7 +51,7 @@ impl Display for Error {
 pub enum ErrorKind {
     InvalidArgument,
     MissingArgument,
-    OptionFormat
+    TokenFormat
 }
 
 impl ErrorKind {
@@ -59,7 +59,7 @@ impl ErrorKind {
         match *self {
             ErrorKind::InvalidArgument => String::from("An invalid option was passed to the program:"),
             ErrorKind::MissingArgument => String::from("A required argument is missing:"),
-            ErrorKind::OptionFormat => String::from("An option was defined in the wrong format:")
+            ErrorKind::TokenFormat => String::from("A token was created in the wrong format:")
         }
     }
 }

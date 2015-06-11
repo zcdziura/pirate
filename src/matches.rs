@@ -31,7 +31,8 @@ impl Matches {
     pub fn new(opts: &mut Vars) -> Result<Matches, Error> {
         let mut args = env::args();
         let mut matches: HashMap<String, String> = HashMap::new();
-        let program_name = args.next().unwrap();
+        
+        args.next(); // Remove the program name
         
         let mut next_arg = args.next();
         while next_arg.is_some() {
