@@ -15,65 +15,81 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::collections::HashMap;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::slice::Iter;
 
 use errors::Error;
-use token::Token;
+use token::{Token, token};
 
 pub struct Vars {
-    pub opts: HashMap<String, bool>,
-    pub args: VecDeque<String>,
+    opts: HashMap<String, Token>,
+    args: VecDeque<Token>,
     pub tokens: Vec<Token>,
     pub program_name: String
 }
 
-impl Vars {
-    pub fn new(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
-        let mut opts: HashMap<String, bool> = HashMap::new();
-        let mut args: VecDeque<String> = VecDeque::new();
-        let mut tokens: Vec<Token> = Vec::new();
-        let mut longest_token_len: usize = 0;
-        
-        for opt in options.iter() {
-            let token = match Token::new(opt) {
-                Ok(t) => t,
-                Err(why) => return Err(why)
-            };
-            
-            if !token.is_group {
-                if token.is_arg {
-                    args.push_back(String::from(token.name()));
-                } else {
-                    opts.insert(String::from(token.name()), token.has_arg);
+pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
+    let mut opts: HashMap<String, Token> = HashMap::new();
+    let mut args: VecDeque<Token> = VecDeque::new();
+    let mut tokens: Vec<Token> = Vec::new();
+    let mut longest_token_len: usize = 0;
+
+    for opt in options.iter() {
+        let token = match token(opt) {
+            Ok(t) => t,
+            Err(why) => return Err(why)
+        };
+
+        if !token.is_group {
+            if token.is_arg {
+                args.push_back(token.clone());
+            } else {
+                if !token.short_name.is_empty() {
+                    opts.insert(token.short_name.clone(), token.clone());
                 }
-                
-                let token_len = token.len();
-                if token_len > 0 {
-                    if token_len > longest_token_len {
-                        longest_token_len = token_len;
-                        for t in tokens.iter_mut() {
-                            let diff = longest_token_len - t.len();
-                            t.adjust_padding(diff);
-                        }
+
+                if !token.long_name.is_empty() {
+                    opts.insert(token.long_name.clone(), token.clone());
+                }
+            }
+
+            let token_len = token.len();
+            if token_len > 0 {
+                if token_len > longest_token_len {
+                    longest_token_len = token_len;
+                    for t in tokens.iter_mut() {
+                        let diff = longest_token_len - t.len();
+                        t.adjust_padding(diff);
                     }
                 }
             }
-            tokens.push(token);
         }
-        
-        opts.insert(String::from("-h"), false);
-        opts.insert(String::from("--help"), false);
-        
-        Ok(Vars {
-            opts: opts,
-            args: args,
-            tokens: tokens,
-            program_name: program_name
-        })
+        tokens.push(token);
     }
+    
+    let help_token = Token {
+        short_name: String::from("h"),
+        long_name: String::from("help"),
+        description: String::from("Display usage information"),
+        is_arg: false,
+        has_arg: false,
+        is_group: false,
+        padding: 0
+    };
 
-    pub fn get_opt(&self, opt_name: &String) -> Option<&bool> {
+    opts.insert(String::from("-h"), help_token.clone());
+    opts.insert(String::from("--help"), help_token.clone());
+
+    Ok(Vars {
+        opts: opts,
+        args: args,
+        tokens: tokens,
+        program_name: String::from(program_name)
+    })
+}
+
+impl Vars {
+    pub fn get_opt(&self, opt_name: &String) -> Option<&Token> {
         self.opts.get(opt_name)
     }
 
@@ -81,11 +97,15 @@ impl Vars {
         self.opts.contains_key(opt)
     }
 
-    pub fn get_arg(&mut self) -> Option<String> {
+    pub fn get_arg(&mut self) -> Option<Token> {
         self.args.pop_front()
     }
 
     pub fn arg_len(&self) -> usize {
         self.args.len()
+    }
+    
+    pub fn tokens(&self) -> Iter<Token>{
+        self.tokens.iter()
     }
 }

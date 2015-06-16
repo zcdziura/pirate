@@ -18,7 +18,7 @@
 use vars::Vars;
 
 pub fn usage(vars: &Vars) {
-    for token in vars.tokens.iter() {
+    for token in vars.tokens() {
         println!("{}", token);
     }
 }

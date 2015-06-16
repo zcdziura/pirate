@@ -17,84 +17,102 @@
 
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
-use std::env;
 
 use errors::{Error, ErrorKind};
 use vars::Vars;
 
 pub struct Matches {
-    matches: HashMap<String, String>,
-    program_name: String
+    matches: HashMap<String, String>
+}
+
+pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
+    let mut matches: HashMap<String, String> = HashMap::new();
+    let mut args = env_args.iter();
+
+    args.next(); // Remove the program name
+
+    let mut next_arg = args.next();
+    while next_arg.is_some() {
+        let mut current_arg = next_arg.unwrap();
+        let mut arg_vec: Vec<String> = Vec::new();
+
+        // Determine if current opt is in short, long, or arg form
+        if &current_arg[..1] == "-" {
+            if &current_arg[..2] == "--" { // Long form opt
+                arg_vec.push(String::from(&current_arg[2..]));
+            } else { // Short form opt
+                // Assuming it's a group of short-form vars; e.g. tar -xzf
+                for c in current_arg[1..].chars() {
+                    let mut s = String::new();
+                    s.push(c);
+                    arg_vec.push(s);
+                }
+            }
+
+            for arg in arg_vec.iter() {
+                if vars.contains_opt(arg) {
+                    let token = vars.get_opt(arg).unwrap();
+
+                    if token.has_arg {
+                        // NOTE: The corresponding arg MUST be immediately following
+                        current_arg = match args.next() {
+                            None =>  return Err(Error::new(ErrorKind::MissingArgument, arg.clone())),
+                            Some(a) => a
+                        };
+
+                        matches.insert(token.name(), current_arg.clone());
+                    } else {
+                        matches.insert(token.name(), String::new());
+                    }
+                } else {
+                    return Err(Error::new(ErrorKind::InvalidArgument, arg.clone()));
+                }
+            }
+        } else { // Probably a required arg
+            let arg = vars.get_arg().unwrap();
+            matches.insert(arg.name(), current_arg.clone());
+        }
+
+        next_arg = args.next();
+    }
+
+    match vars.arg_len() {
+        0 => Ok(Matches { matches: matches }),
+        _ => Err(Error::new(ErrorKind::MissingArgument, vars.get_arg().unwrap().name())),
+    }
 }
 
 impl Matches {
-    pub fn new(opts: &mut Vars) -> Result<Matches, Error> {
-        let mut args = env::args();
-        let mut matches: HashMap<String, String> = HashMap::new();
-        
-        args.next(); // Remove the program name
-        
-        let mut next_arg = args.next();
-        while next_arg.is_some() {
-            let mut current_arg = next_arg.unwrap();
-            let mut arg_vec: Vec<String> = Vec::new();
-
-            // Determine if current opt is in short, long, or arg form
-            if &current_arg[..1] == "-" {
-                if &current_arg[..2] == "--" { // Long form opt
-                    arg_vec.push(String::from(&current_arg[2..]));
-                } else { // Short form opt
-                    // Assuming it's a group of short-form opts; e.g. tar -xzf
-                    for c in current_arg[1..].chars() {
-                        let mut s = String::new();
-                        s.push(c);
-                        arg_vec.push(s);
-                    }
-                }
-
-                for arg in arg_vec.iter() {
-                    if opts.contains_opt(&arg) {
-                        let has_arg: bool = *opts.get_opt(&arg).unwrap();
-
-                        if has_arg {
-                            // NOTE: The corresponding arg MUST be immediately following
-                            current_arg = match args.next() {
-                                None =>  return Err(Error::new(ErrorKind::MissingArgument, (*arg).clone())),
-                                Some(a) => a
-                            };
-
-                            matches.insert(arg.clone(), current_arg);
-                        } else {
-                            matches.insert(arg.clone(), String::new());
-                        }
-                    } else {
-                        return Err(Error::new(ErrorKind::InvalidArgument, arg.clone()));
-                    }
-                }
-            } else { // Probably a required arg
-                let arg_name: String = opts.get_arg().unwrap().clone();
-                matches.insert(arg_name, current_arg);
-            }
-
-            next_arg = args.next();
-        }
-
-        match opts.arg_len() {
-            0 => Ok(Matches { matches: matches, program_name: program_name }),
-            _ => Err(Error::new(ErrorKind::MissingArgument, opts.get_arg().unwrap())),
-        }
-    }
-
     pub fn get(&self, arg: &str) -> Option<&String> {
         self.matches.get(arg)
     }
 
-    pub fn has_arg(&self, arg: &str) -> bool {
+    pub fn has_match(&self, arg: &str) -> bool {
         let arg = String::from(arg);
         self.matches.contains_key(&arg)
     }
 
-    pub fn args(&self) -> Keys<String, String> {
+    pub fn matches(&self) -> Keys<String, String> {
         self.matches.keys()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Matches;
+    use super::super::errors::{Error, ErrorKind};
+    use super::super::vars::Vars;
+    
+    #[test]
+    fn test_matches() {
+        let opts = vec!["o/opt(An option)", "a(Argument):"];
+        let env_args = vec![String::from("test"), String::from("-a"), String::from("Test")];
+        let mut vars = Vars::new("Test", &opts).unwrap();
+        let matches = match Matches::new(&mut vars, &env_args) {
+            Ok(m) => m,
+            Err(why) => panic!("An error occurred: {}", why)
+        };
+        
+        assert_eq!(matches.get("opt").unwrap(), &String::from("opt"));
     }
 }

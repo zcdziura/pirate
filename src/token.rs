@@ -15,85 +15,83 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::ascii::AsciiExt;
 use std::fmt::{self, Display, Formatter};
 
 use errors::{Error, ErrorKind};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Token {
-    short_name: String,
-    long_name: String,
-    description: String,
+    pub short_name: String,
+    pub long_name: String,
+    pub description: String,
     pub is_arg: bool,
     pub has_arg: bool,
     pub is_group: bool,
-    padding: usize
+    pub padding: usize
 }
 
-impl Token {
-    pub fn new(input: &str) -> Result<Token, Error> {
-        let mut short_name = String::new();
-        let mut long_name = String::new();
-        let mut description = String::new();
-        let last_char = input.len() - 1;
-        
-        let is_arg = match &input[..1] {
-            ":" => true,
-            _ => false
-        };
+pub fn token(input: &str) -> Result<Token, Error> {
+    let mut short_name = String::new();
+    let mut long_name = String::new();
+    let mut description = String::new();
+    let last_char = input.len() - 1;
 
-        let has_arg = match &input[last_char..] {
-            ":" => true,
-            _ => false
-        };
+    let is_arg = match &input[..1] {
+        ":" => true,
+        _ => false
+    };
 
-        if is_arg && has_arg {
-            return Err(Error::new(ErrorKind::OptionFormat, String::from(input)));
-        }
+    let has_arg = match &input[last_char..] {
+        ":" => true,
+        _ => false
+    };
 
-        let option = if is_arg {
-            &input[1..]
-        } else if has_arg {
-            &input[..last_char]
-        } else {
-            input
-        };
+    if is_arg && has_arg {
+        return Err(Error::new(ErrorKind::TokenFormat, String::from(input)));
+    }
 
-        let mut current_stage = AnalysisStage::ShortName;
-        for c in option.chars() {
-            match c {
-                '/' => current_stage = AnalysisStage::LongName,
-                '(' => current_stage = AnalysisStage::Description,
-                ')' => (),
-                _ => {
-                    match current_stage {
-                        AnalysisStage::ShortName => short_name.push(c),
-                        AnalysisStage::LongName => long_name.push(c),
-                        AnalysisStage::Description => description.push(c)
-                    }
+    let option = if is_arg {
+        &input[1..]
+    } else if has_arg {
+        &input[..last_char]
+    } else {
+        input
+    };
+
+    let mut current_stage = AnalysisStage::ShortName;
+    for c in option.chars() {
+        match c {
+            '/' => current_stage = AnalysisStage::LongName,
+            '(' => current_stage = AnalysisStage::Description,
+            ')' => (),
+            _ => {
+                match current_stage {
+                    AnalysisStage::ShortName => short_name.push(c),
+                    AnalysisStage::LongName => long_name.push(c),
+                    AnalysisStage::Description => description.push(c)
                 }
             }
         }
-
-        let is_group = if short_name.is_empty() && long_name.is_empty() {
-            true
-        } else {
-            false
-        };
-
-        Ok(Token {
-            short_name: short_name,
-            long_name: long_name,
-            is_arg: is_arg,
-            has_arg: has_arg,
-            is_group: is_group,
-            description: description,
-            padding: 0
-        })
     }
-    
-    
+
+    let is_group = if short_name.is_empty() && long_name.is_empty() {
+        true
+    } else {
+        false
+    };
+
+    Ok(Token {
+        short_name: short_name,
+        long_name: long_name,
+        is_arg: is_arg,
+        has_arg: has_arg,
+        is_group: is_group,
+        description: description,
+        padding: 0
+    })
+}
+
+impl Token {
     pub fn adjust_padding(&mut self, padding: usize) {
         self.padding = padding;
     }
@@ -115,13 +113,13 @@ impl Token {
         repr.len()
     }
     
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> String {
         if !self.long_name.is_empty() {
-            &self.long_name
+            self.long_name.clone()
         } else if !self.short_name.is_empty() {
-            &self.short_name
+            self.short_name.clone()
         } else {
-            ""   
+            String::new()
         }
     }
     
@@ -144,7 +142,6 @@ impl Token {
 
                 if self.has_arg {
                     let name = String::from(self.name());
-                    name.to_ascii_uppercase();
                     repr.push(' ');
                     repr.push_str(&name);
                 }
@@ -152,7 +149,6 @@ impl Token {
                 repr.push(']');
             } else {
                 let name = String::from(self.name());
-                name.to_ascii_uppercase();
                 repr.push_str(&name);
             }
             
@@ -207,7 +203,6 @@ mod tests {
             padding: 0
         };
 
-        println!("{}", token);
         assert_eq!(token, control_token);
     }
 
@@ -228,7 +223,6 @@ mod tests {
             padding: 0
         };
 
-        println!("{}", token);
         assert_eq!(token, control_token);
     }
 
@@ -249,7 +243,6 @@ mod tests {
             padding: 0
         };
 
-        println!("{}", token);
         assert_eq!(token, control_token);
     }
 
@@ -270,7 +263,6 @@ mod tests {
             padding: 0
         };
 
-        println!("{}", token);
         assert_eq!(token, control_token);
     }
 
@@ -286,8 +278,8 @@ mod tests {
 
     #[test]
     fn test_name() {
-        let short_name = "o/out";
-        let long_name = "/out";
+        let short_name = "o";
+        let long_name = "o/out";
         let group = "(Output)";
         
         let short_token = Token::new(short_name).unwrap();
