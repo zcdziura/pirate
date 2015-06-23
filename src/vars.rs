@@ -55,7 +55,6 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
             }
 
             let token_len = token.len();
-            println!("Token {} length: {}", token.name(), token_len);
             if token_len > 0 {
                 if token_len > longest_token_len {
                     longest_token_len = token_len;
@@ -81,8 +80,8 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
     };
     
     tokens.push(help_token);
-    opts.insert(String::from("-h"), index);
-    opts.insert(String::from("--help"), index);
+    opts.insert(String::from("h"), index);
+    opts.insert(String::from("help"), index);
 
     Ok(Vars {
         opts: opts,

@@ -76,7 +76,7 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
     }
 }
 
-trait MatchesTrait {
+pub trait MatchesTrait {
     fn get(&self, arg: &str) -> Option<&String>;
 
     fn has_match(&self, arg: &str) -> bool;

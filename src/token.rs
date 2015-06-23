@@ -119,7 +119,7 @@ impl Token {
         } else if !self.short_name.is_empty() {
             self.short_name.clone()
         } else {
-            String::new()
+            self.description.clone()
         }
     }
     
@@ -166,10 +166,17 @@ impl Display for Token {
             spacing.push(' ');
         }
         
+        let short_name_empty = self.short_name.is_empty();
+        let long_name_empty = self.long_name.is_empty();
+
         let repr = if self.is_group {
-            format!("{}:", self.description)
-        } else {
+            format!("\n{}:", self.description)
+        } else if !short_name_empty && !long_name_empty {
             format!("  -{}, --{}{}  {}", self.short_name, self.long_name, spacing, self.description)
+        } else if short_name_empty && !long_name_empty { 
+            format!("  --{}{}  {}", self.long_name, spacing, self.description)
+        } else {
+            format!("  -{}{}  {}", self.short_name, spacing, self.description)
         };
 
         write!(f, "{}", repr)

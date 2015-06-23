@@ -18,6 +18,15 @@
 use vars::Vars;
 
 pub fn usage(vars: &Vars) {
+    print!("Usage: {} ", vars.program_name);
+
+    for token in vars.tokens() {
+        if let Some(usage) = token.usage() {
+            print!("{} ", usage);
+        }
+    }
+    
+    println!("\nOptions:");
     for token in vars.tokens() {
         println!("{}", token);
     }

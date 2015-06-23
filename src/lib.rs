@@ -21,6 +21,6 @@ mod token;
 mod usage;
 mod vars;
 
-pub use matches::{Matches, matches};
+pub use matches::{Matches, MatchesTrait, matches};
 pub use vars::{Vars, vars};
 pub use usage::usage;
