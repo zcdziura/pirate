@@ -32,9 +32,25 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut opts: HashMap<String, usize> = HashMap::new();
     let mut args: VecDeque<usize> = VecDeque::new();
-    let mut longest_token_len: usize = 0;
     let mut index: usize = 0;
+    
+    // The first option should be the help option, i.e. -h, --help
+    let help_token = Token {
+        short_name: String::from("h"),
+        long_name: String::from("help"),
+        description: String::from("Display usage information"),
+        is_arg: false,
+        has_arg: false,
+        is_group: false,
+        padding: 0
+    };
+    opts.insert(help_token.short_name.clone(), index);
+    opts.insert(help_token.long_name.clone(), index);
+    let mut longest_token_len: usize = help_token.len();    
+    tokens.push(help_token);
+    index += 1;
 
+    // Second, add the other, user defined options
     for opt in options.iter() {
         let token = match token(opt) {
             Ok(t) => t,
@@ -54,34 +70,22 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
                 }
             }
 
-            let token_len = token.len();
-            if token_len > 0 {
-                if token_len > longest_token_len {
-                    longest_token_len = token_len;
-                    for t in tokens.iter_mut() {
-                        let diff = longest_token_len - t.len();
-                        t.adjust_padding(diff);
-                    }
-                }
+            if token.len() > longest_token_len {
+                longest_token_len = token.len();
             }
         }
         tokens.push(token);
         index += 1;
     }
     
-    let help_token = Token {
-        short_name: String::from("h"),
-        long_name: String::from("help"),
-        description: String::from("Display usage information"),
-        is_arg: false,
-        has_arg: false,
-        is_group: false,
-        padding: 0
-    };
-    
-    tokens.push(help_token);
-    opts.insert(String::from("h"), index);
-    opts.insert(String::from("help"), index);
+    // Finally, adjust the padding for each token so they display properly
+    for t in tokens.iter_mut() {
+        let token_len = t.len();
+        if token_len < longest_token_len {
+            let delta = longest_token_len - token_len;
+            t.adjust_padding(delta);
+        }
+    }
 
     Ok(Vars {
         opts: opts,

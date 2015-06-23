@@ -136,7 +136,7 @@ impl Token {
                 }
 
                 if !self.long_name.is_empty() {
-                    repr.push_str(" | --");
+                    repr.push_str("|--");
                     repr.push_str(&self.long_name);
                 }
 
