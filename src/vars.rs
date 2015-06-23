@@ -22,17 +22,18 @@ use errors::Error;
 use token::{Token, token};
 
 pub struct Vars {
-    opts: HashMap<String, Token>,
-    args: VecDeque<Token>,
-    pub tokens: Vec<Token>,
+    tokens: Vec<Token>,
+    opts: HashMap<String, usize>,
+    args: VecDeque<usize>,
     pub program_name: String
 }
 
 pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
-    let mut opts: HashMap<String, Token> = HashMap::new();
-    let mut args: VecDeque<Token> = VecDeque::new();
     let mut tokens: Vec<Token> = Vec::new();
+    let mut opts: HashMap<String, usize> = HashMap::new();
+    let mut args: VecDeque<usize> = VecDeque::new();
     let mut longest_token_len: usize = 0;
+    let mut index: usize = 0;
 
     for opt in options.iter() {
         let token = match token(opt) {
@@ -42,18 +43,19 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
 
         if !token.is_group {
             if token.is_arg {
-                args.push_back(token.clone());
+                args.push_back(index);
             } else {
                 if !token.short_name.is_empty() {
-                    opts.insert(token.short_name.clone(), token.clone());
+                    opts.insert(token.short_name.clone(), index);
                 }
 
                 if !token.long_name.is_empty() {
-                    opts.insert(token.long_name.clone(), token.clone());
+                    opts.insert(token.long_name.clone(), index);
                 }
             }
 
             let token_len = token.len();
+            println!("Token {} length: {}", token.name(), token_len);
             if token_len > 0 {
                 if token_len > longest_token_len {
                     longest_token_len = token_len;
@@ -65,6 +67,7 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
             }
         }
         tokens.push(token);
+        index += 1;
     }
     
     let help_token = Token {
@@ -76,9 +79,10 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
         is_group: false,
         padding: 0
     };
-
-    opts.insert(String::from("-h"), help_token.clone());
-    opts.insert(String::from("--help"), help_token.clone());
+    
+    tokens.push(help_token);
+    opts.insert(String::from("-h"), index);
+    opts.insert(String::from("--help"), index);
 
     Ok(Vars {
         opts: opts,
@@ -89,16 +93,24 @@ pub fn vars(program_name: &str, options: &[&str]) -> Result<Vars, Error> {
 }
 
 impl Vars {
-    pub fn get_opt(&self, opt_name: &String) -> Option<&Token> {
-        self.opts.get(opt_name)
+    pub fn get_opt(&self, opt_name: &str) -> Option<&Token> {
+        if let Some(&index) = self.opts.get(opt_name) { 
+            self.tokens.get(index)
+        } else {
+            None
+        }
     }
 
-    pub fn contains_opt(&self, opt: &String) -> bool {
+    pub fn contains_opt(&self, opt: &str) -> bool {
         self.opts.contains_key(opt)
     }
 
-    pub fn get_arg(&mut self) -> Option<Token> {
-        self.args.pop_front()
+    pub fn get_arg(&mut self) -> Option<&Token> {
+        if let Some(index) = self.args.pop_front() {
+            self.tokens.get(index)
+        } else {
+            None
+        }
     }
 
     pub fn arg_len(&self) -> usize {

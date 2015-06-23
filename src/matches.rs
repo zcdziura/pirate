@@ -21,19 +21,15 @@ use std::collections::hash_map::Keys;
 use errors::{Error, ErrorKind};
 use vars::Vars;
 
-pub struct Matches {
-    matches: HashMap<String, String>
-}
+pub type Matches = HashMap<String, String>;
 
 pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
-    let mut matches: HashMap<String, String> = HashMap::new();
+    let mut matches: Matches = HashMap::new();
     let mut args = env_args.iter();
 
     args.next(); // Remove the program name
 
-    let mut next_arg = args.next();
-    while next_arg.is_some() {
-        let mut current_arg = next_arg.unwrap();
+    while let Some(mut current_arg) = args.next() {
         let mut arg_vec: Vec<String> = Vec::new();
 
         // Determine if current opt is in short, long, or arg form
@@ -72,28 +68,34 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
             let arg = vars.get_arg().unwrap();
             matches.insert(arg.name(), current_arg.clone());
         }
-
-        next_arg = args.next();
     }
 
     match vars.arg_len() {
-        0 => Ok(Matches { matches: matches }),
+        0 => Ok( matches ),
         _ => Err(Error::new(ErrorKind::MissingArgument, vars.get_arg().unwrap().name())),
     }
 }
 
-impl Matches {
-    pub fn get(&self, arg: &str) -> Option<&String> {
-        self.matches.get(arg)
+trait MatchesTrait {
+    fn get(&self, arg: &str) -> Option<&String>;
+
+    fn has_match(&self, arg: &str) -> bool;
+
+    fn matches(&self) -> Keys<String, String>;
+}
+
+impl MatchesTrait for Matches {
+    fn get(&self, arg: &str) -> Option<&String> {
+        self.get(arg)
     }
 
-    pub fn has_match(&self, arg: &str) -> bool {
+    fn has_match(&self, arg: &str) -> bool {
         let arg = String::from(arg);
-        self.matches.contains_key(&arg)
+        self.contains_key(&arg)
     }
 
-    pub fn matches(&self) -> Keys<String, String> {
-        self.matches.keys()
+    fn matches(&self) -> Keys<String, String> {
+        self.keys()
     }
 }
 
