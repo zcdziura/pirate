@@ -4,9 +4,10 @@ use pirate::{Matches, Match, matches, usage, vars};
 
 #[test]
 fn main() {
-    let env_args: Vec<String> = vec![String::from("test"), String::from("-a"), String::from("2"), String::from("3")];
+    let env_args: Vec<String> = vec![String::from("test"), String::from("-a"), String::from("2"),
+                                     String::from("3")];
     let opts = vec!["a/addend(The right side of the addition equation; default=1):", "(Required Arguments)",
-                                                                        ":augend(The left side of an addition equation)"];
+                    ":augend(The left side of an addition equation)"];
     let mut vars = vars("test", &opts).unwrap();
     
     let matches: Matches = match matches(&mut vars, &env_args) {

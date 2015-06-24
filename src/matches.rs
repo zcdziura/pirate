@@ -77,7 +77,7 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
 }
 
 pub trait Match {
-    fn get(&self, arg: &str) -> Option<String>;
+    fn get(&self, arg: &str) -> Option<&String>;
 
     fn has_match(&self, arg: &str) -> bool;
 
@@ -85,11 +85,8 @@ pub trait Match {
 }
 
 impl Match for Matches {
-    fn get(&self, arg: &str) -> Option<String> {
-        match self.get(arg) {
-            Some(s) => Some(s.clone()),
-            None => None
-        }
+    fn get(&self, arg: &str) -> Option<&String> {
+        self.get(arg)
     }
 
     fn has_match(&self, arg: &str) -> bool {
@@ -118,6 +115,6 @@ mod tests {
         };
         
         let argument = matches.get("a").unwrap();
-        assert_eq!(argument, String::from("Test"));
+        assert_eq!(*argument, String::from("Test"));
     }
 }
