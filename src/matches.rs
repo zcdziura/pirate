@@ -105,7 +105,7 @@ mod tests {
     use super::super::vars::vars;
     
     #[test]
-    fn test_matches() {
+    fn test_matches_good() {
         let opts = vec!["o/opt(An option)", "a(An argument):"];
         let env_args = vec![String::from("test"), String::from("-a"), String::from("Test")];
         let mut vars = vars("Test", &opts).unwrap();
@@ -114,7 +114,24 @@ mod tests {
             Err(why) => panic!("An error occurred: {}", why)
         };
         
+        let has_opt = match matches.get("opt") {
+            Some(_) => true,
+            None => false
+        };
         let argument = matches.get("a").unwrap();
         assert_eq!(*argument, String::from("Test"));
+        assert_eq!(has_opt, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_matches_bad() {
+        let opts = vec!["o/opt(An option)", "a(An argument):"];
+        let env_args = vec![String::from("test"), String::from("-a")];
+        let mut vars = vars("Test", &opts).unwrap();
+        match matches(&mut vars, &env_args) {
+            Ok(m) => m,
+            Err(why) => panic!("An error occurred: {}", why)
+        };
     }
 }
