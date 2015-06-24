@@ -76,17 +76,20 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
     }
 }
 
-pub trait MatchesTrait {
-    fn get(&self, arg: &str) -> Option<&String>;
+pub trait Match {
+    fn get(&self, arg: &str) -> Option<String>;
 
     fn has_match(&self, arg: &str) -> bool;
 
     fn matches(&self) -> Keys<String, String>;
 }
 
-impl MatchesTrait for Matches {
-    fn get(&self, arg: &str) -> Option<&String> {
-        self.get(arg)
+impl Match for Matches {
+    fn get(&self, arg: &str) -> Option<String> {
+        match self.get(arg) {
+            Some(s) => Some(s.clone()),
+            None => None
+        }
     }
 
     fn has_match(&self, arg: &str) -> bool {
@@ -101,20 +104,20 @@ impl MatchesTrait for Matches {
 
 #[cfg(test)]
 mod tests {
-    use super::Matches;
-    use super::super::errors::{Error, ErrorKind};
-    use super::super::vars::Vars;
+    use super::matches;
+    use super::super::vars::vars;
     
     #[test]
     fn test_matches() {
-        let opts = vec!["o/opt(An option)", "a(Argument):"];
+        let opts = vec!["o/opt(An option)", "a(An argument):"];
         let env_args = vec![String::from("test"), String::from("-a"), String::from("Test")];
-        let mut vars = Vars::new("Test", &opts).unwrap();
-        let matches = match Matches::new(&mut vars, &env_args) {
+        let mut vars = vars("Test", &opts).unwrap();
+        let matches = match matches(&mut vars, &env_args) {
             Ok(m) => m,
             Err(why) => panic!("An error occurred: {}", why)
         };
         
-        assert_eq!(matches.get("opt").unwrap(), &String::from("opt"));
+        let argument = matches.get("a").unwrap();
+        assert_eq!(argument, String::from("Test"));
     }
 }
