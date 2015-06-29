@@ -62,8 +62,7 @@ pub fn token(input: &str) -> Result<Token, Error> {
     for c in option.chars() {
         match c {
             '/' => current_stage = AnalysisStage::LongName,
-            '(' => current_stage = AnalysisStage::Description,
-            ')' => (),
+            '#' => current_stage = AnalysisStage::Description,
             _ => {
                 match current_stage {
                     AnalysisStage::ShortName => short_name.push(c),
@@ -195,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_new_token() {
-        let opt = "h/help(Display the program usage)";
+        let opt = "h/help#Display the program usage";
         let token = match token(opt) {
             Ok(t) => t,
             Err(why) => panic!("Received error: {}", why)
@@ -215,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_new_group() {
-        let opt = "(This is a group)";
+        let opt = "#This is a group";
         let token = match token(opt) {
             Ok(t) => t,
             Err(why) => panic!("Received error: {}", why)
@@ -235,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_new_token_with_arg() {
-        let opt = "o/option(An option with an argument):";
+        let opt = "o/option#An option with an argument:";
         let token = match token(opt) {
             Ok(t) => t,
             Err(why) => panic!("Received error: {}", why)
@@ -255,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_new_token_as_arg() {
-        let opt = ":a/arg(An argument)";
+        let opt = ":a/arg#An argument";
         let token = match token(opt) {
             Ok(t) => t,
             Err(why) => panic!("Received error: {}", why)
@@ -276,7 +275,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_token_format() {
-        let input = ":w/wrong(Wrong format):";
+        let input = ":w/wrong#Wrong format:";
         match token(input) {
             Ok(t) => t,
             Err(why) => panic!("Received error: {}", why)
@@ -286,8 +285,8 @@ mod tests {
     #[test]
     fn test_name() {
         let short_name = "o";
-        let long_name = "o/out";
-        let group = "(Output)";
+        let long_name = "/out";
+        let group = "#Output";
         
         let short_token = token(short_name).unwrap();
         let long_token = token(long_name).unwrap();

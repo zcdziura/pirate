@@ -23,7 +23,7 @@ use vars::Vars;
 
 pub type Matches = HashMap<String, String>;
 
-pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
+pub fn matches(env_args: &[String], vars: &mut Vars) -> Result<Matches, Error> {
     let mut matches: Matches = HashMap::new();
     let mut args = env_args.iter();
 
@@ -56,7 +56,7 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
                             Some(a) => a
                         };
 
-                        matches.insert(token.name(), current_arg.clone());
+                        matches.insert(token.name(), (*current_arg).clone());
                     } else {
                         matches.insert(token.name(), String::new());
                     }
@@ -66,7 +66,7 @@ pub fn matches(vars: &mut Vars, env_args: &[String]) -> Result<Matches, Error> {
             }
         } else { // Probably a required arg
             let arg = vars.get_arg().unwrap();
-            matches.insert(arg.name(), current_arg.clone());
+            matches.insert(arg.name(), (*current_arg).clone());
         }
     }
 
@@ -101,18 +101,20 @@ impl Match for Matches {
 
 #[cfg(test)]
 mod tests {
-    use super::matches;
+    use super::{Match, matches};
     use super::super::vars::vars;
     
     #[test]
     fn test_matches_good() {
-        let opts = vec!["o/opt(An option)", "a(An argument):"];
         let env_args = vec![String::from("test"), String::from("-a"), String::from("Test")];
-        let mut vars = vars("Test", &opts).unwrap();
-        let matches = match matches(&mut vars, &env_args) {
+        let opts = vec!["o/opt#An option", "a#An argument:"];
+        
+        let mut var = match vars("Test", &opts) {
             Ok(m) => m,
             Err(why) => panic!("An error occurred: {}", why)
         };
+        
+        let matches = matches(&env_args, &mut var).unwrap();
         
         let has_opt = match matches.get("opt") {
             Some(_) => true,
@@ -126,10 +128,11 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_matches_bad() {
-        let opts = vec!["o/opt(An option)", "a(An argument):"];
         let env_args = vec![String::from("test"), String::from("-a")];
+        let opts = vec!["o/opt#An option", "a#An argument:"];
+        
         let mut vars = vars("Test", &opts).unwrap();
-        match matches(&mut vars, &env_args) {
+        match matches(&env_args, &mut vars) {
             Ok(m) => m,
             Err(why) => panic!("An error occurred: {}", why)
         };
