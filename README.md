@@ -6,12 +6,11 @@ A command-line arrrrguments parser, written in Rust.
 Synopsis
 --------
 
-Most programs that provide a command-line interface use a special-purpose library to make the process easier, such as the GNU Project's `getopt` library. The Rust team provides their own alternative, `getoptions`, which deserves an award for the Most Originally Named Project Ever.
+Most programs that provide a command-line interface use a special-purpose library to make the process easier, such as the GNU Project's `getopt` library. The Rust team provides their own alternative, `getopts`, which deserves an award for the Most Originally Named Project Ever.
 
-In all seriousness, `getoptions` is a fantastic library that gives the developers all of the power necessary to create and interface with command-line arguments. However, with all that power comes complexity. `getoptions` -- while straight forward to use -- is verbose. The developer has to call different functions repeatedly in order to add different command-line options to their programs. While the only victim here is the developer's wrists due to carpal tunnel, I felt that there was a
-better way to do things.
+In all seriousness, `getopts` is a fantastic library that gives the developers all of the power necessary to create and interface with command-line arguments. However, with all that power comes complexity. `getopts` -- while straight forward to use -- is verbose. The developer has to call different functions repeatedly in order to add different command-line options to their programs. While the only victim here is the developer's wrists due to carpal tunnel, I felt that there was a better way to do things.
 
-Enter Pirate (which should totally usurp `getoptions` for the award of Most Originally Named Project Ever).
+Enter Pirate (which should totally usurp `getopts` for the award of Most Originally Named Project Ever).
 
 Installation
 ------------
@@ -38,7 +37,7 @@ Using Pirate is simple. First, create a vector defining all of the valid options
 let options = vec![
     "a/addend#The right side of the addition equation; default=1:",
     "#Required Arguments",
-    ":augend#The left side of an addition equation"
+    ":/augend#The left side of an addition equation"
 ];
 ```
 
@@ -46,7 +45,7 @@ Options are defined in a very specific format:
 
   * Options that have an associated argument must be followed by a colon (:). The colon must be the last character of the option (see above for example).
   * Long-form options are denoted by a preceding slash (/). Options are able to have short- and long-forms. Options which are only long-form still need a preceding slash, e.g. `"/addend"`.
-  * Required program arguments must have a preceding colon as the first character of the opt, e.g. `":augend"`.
+  * Required program arguments must have a preceding colon as the first character of the opt, e.g. `":/augend"`.
   * Option descriptions are denoted by a proceding hash (#). Descriptions are optional and are used to display helpful information about the option when displaying a program's usage information (typically when the `--help` flag is passed). Options with **only** a description (i.e. no short- or long-form name) are called "Groups", and are used to group options together when displaying usage.
 
 Next, create a `Vars` struct, which is responsible for keeping track of all of the options, along with the program's name, defined for the program:
@@ -121,7 +120,7 @@ fn main() {
     let options = vec![
         "a/addend#The right side of the addition equation; default=1:",
         "#Required Arguments",
-        ":augend#The left side of an addition equation"
+        ":/augend#The left side of an addition equation"
     ];
     let mut vars = vars("test", &options).unwrap();
     
