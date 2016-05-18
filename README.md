@@ -60,8 +60,8 @@ let vars: Vars = match pirate::vars("program-name", &options) {
 Next, call the `pirate::matches()` function, passing in a vector of the program's environment arguments, along with a mutable reference to the `Vars` struct that you previously defined:
 
 ```rust
-let matches: Matches = match pirate::matches(env::args().collect(),
-        &mut vars) {
+let args: Vec<String> = env::args().collect();
+let matches: Matches = match pirate::matches(&args, &mut vars) {
     Ok(m) => m,
     Err(why) => {
         println!("Error: {}", why);
@@ -90,8 +90,8 @@ Something to remember when using the `get()` function: by default, the `pirate::
 ```rust
 let options = vec!["l/long#An example opt"];
 let vars = pirate::vars("program-name", &options);
-let matches = pirate::matches(&env::args().collect(),
-    &mut vars).unwrap();
+let args: Vec<String> = env::args().collect();
+let matches = pirate::matches(&args, &mut vars).unwrap();
 
 let short = matches.get("l").unwrap(); // Error! This won't work!
 let long = matches.get("long").unwrap(); // Success!
